@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VeryU — Niche London Experiences</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#121723; --surface:#282936; --surface-2:#323348; --border:#3a3b4f;
+  --purple:#7034f4; --purple-light:#9566f7; --purple-dark:#5223c2;
+  --purple-glow:rgba(112,52,244,0.18);
+  --mint:#69e2c1; --pink:#ea5686;
+  --text:#F0F0F0; --text-muted:#9098ac; --text-dim:#5c6478; --radius:14px;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: Helvetica, Arial, sans-serif; line-height: 1.6; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--purple-dark); border-radius: 3px; }
+
+/* ═══════════════════════════════════════
+   ONBOARDING OVERLAY
+═══════════════════════════════════════ */
+.ob-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(10,13,20,0.97); backdrop-filter: blur(24px);
+  display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+}
+.ob-overlay.hidden { display: none; }
+.ob-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 24px; padding: 2.5rem; max-width: 560px; width: 100%;
+  position: relative; overflow: hidden;
+}
+.ob-box::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--purple-dark), var(--purple-light));
+}
+.ob-progress-track { background: var(--border); border-radius: 100px; height: 3px; margin-bottom: 2rem; }
+.ob-progress-fill { background: var(--text); height: 3px; border-radius: 100px; transition: width .4s ease; }
+.ob-step-label { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: .75rem; }
+.ob-step h2 { font-family: Helvetica, Arial, sans-serif; font-size: 1.85rem; font-weight: 900; line-height: 1.2; margin-bottom: .5rem; }
+.ob-step h2 em { color: var(--text); font-weight: 700; font-style: normal; }
+.ob-step p { color: var(--text-muted); font-size: 14px; margin-bottom: 1.75rem; }
+.ob-step { display: none; }
+.ob-step.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.ob-chips { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+.ob-chip {
+  padding: 8px 15px; border-radius: 100px; font-size: 13.5px; font-weight: 500;
+  border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; transition: all .2s; user-select: none;
+}
+.ob-chip:hover { border-color: var(--purple); color: var(--text); }
+.ob-chip.selected { background: var(--text); border-color: var(--purple); color: var(--bg); font-weight: 700; }
+
+.ob-options { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin-bottom: 2rem; }
+.ob-option { padding: 1rem 1.25rem; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; transition: all .2s; }
+.ob-option:hover { border-color: var(--purple); }
+.ob-option.selected { border-color: var(--purple); background: var(--purple-glow); }
+.ob-opt-icon { font-size: 1.6rem; margin-bottom: .4rem; }
+.ob-opt-label { font-size: 14px; font-weight: 600; }
+.ob-opt-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.ob-footer { display: flex; align-items: center; justify-content: space-between; }
+.ob-back { background: none; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer; font-family: inherit; }
+.ob-back:hover { color: var(--text); }
+.ob-next-btn {
+  background: var(--text); color: var(--bg); border: none;
+  padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: all .25s;
+}
+.ob-next-btn:hover { background: var(--purple-light); transform: translateY(-1px); }
+.ob-skip { font-size: 13px; color: var(--text-dim); text-align: center; margin-top: 1.5rem; cursor: pointer; transition: color .2s; }
+.ob-skip:hover { color: var(--text-muted); }
+
+.ob-loading { text-align: center; padding: 1.5rem 0; }
+.ob-loading h2 { font-family: Helvetica, Arial, sans-serif; font-size: 1.6rem; margin-bottom: 1rem; }
+.ob-loading h2 em { color: var(--text); font-weight: 700; font-style: normal; }
+.ob-loading p { color: var(--text-muted); font-size: 14px; }
+.ob-spinner { width: 46px; height: 46px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 1s linear infinite; margin: 1.5rem auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ob-reveal { text-align: center; padding: .5rem 0; }
+.ob-reveal-emoji { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+.ob-reveal-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: .5rem; }
+.ob-reveal-title { font-family: Helvetica, Arial, sans-serif; font-size: 2.1rem; font-weight: 900; color: var(--text); margin-bottom: .75rem; }
+.ob-reveal-desc { color: var(--text-muted); font-size: 15px; margin-bottom: 1.5rem; line-height: 1.7; }
+.ob-reveal-stats {
+  display: inline-flex; gap: 1.25rem; background: var(--purple-glow);
+  border: 1px solid rgba(139,92,246,.25); border-radius: 10px;
+  padding: 10px 20px; font-size: 13px; font-weight: 600;
+  color: var(--purple-light); margin-bottom: 2rem; flex-wrap: wrap; justify-content: center;
+}
+
+/* ═══════════════════════════════════════
+   NAV
+═══════════════════════════════════════ */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(18,23,35,0.9); backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  height: 64px; padding: 0 2.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo-box { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.nav-logo-box img { width: 46px; height: 46px; object-fit: contain; }
+.nav-logo-box span { font-family: Arial, sans-serif; font-weight: 700; font-size: 16px; color: var(--text); letter-spacing: .3px; }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a { color: var(--text-muted); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: color .2s; }
+.nav-links a:hover { color: var(--text); }
+.nav-right { display: flex; align-items: center; gap: .875rem; }
+.tribe-badge {
+  display: none; align-items: center; gap: 7px;
+  background: var(--purple-glow); border: 1px solid rgba(139,92,246,.3);
+  color: var(--purple-light); padding: 6px 14px; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.tribe-badge:hover { background: rgba(139,92,246,.22); }
+.tribe-badge.visible { display: flex; }
+.tribe-dot { width: 7px; height: 7px; background: var(--mint); border-radius: 50%; }
+.btn-ghost {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-muted); padding: 7px 16px; border-radius: 8px;
+  font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 7px;
+  transition: all .2s; font-family: inherit;
+}
+.btn-ghost:hover { border-color: var(--purple); color: var(--text); }
+.btn-purple {
+  background: var(--text); color: var(--bg); border: none;
+  padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .2s; font-family: inherit;
+}
+.btn-purple:hover { background: var(--purple-light); transform: translateY(-1px); }
+
+/* ═══════════════════════════════════════
+   HERO
+═══════════════════════════════════════ */
+.hero { padding: 72px 2.5rem 52px; position: relative; overflow: hidden; }
+.hero-glow { position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 700px; height: 500px; background: radial-gradient(ellipse, rgba(112,52,244,.10) 0%, rgba(234,86,134,.06) 45%, transparent 72%); pointer-events: none; }
+.hero-inner { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.1fr; gap: 3.5rem; align-items: center; }
+.hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.16); color: var(--text-muted); padding: 5px 14px; border-radius: 100px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 1.5rem; }
+.hero-badge .dot { width: 6px; height: 6px; background: var(--pink); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+h1.hero-title { font-family: Helvetica, Arial, sans-serif; font-size: clamp(2.4rem, 4.5vw, 4rem); font-weight: 900; line-height: 1.1; margin-bottom: 1.25rem; }
+h1.hero-title em { color: var(--text); font-weight: 700; font-style: normal; }
+h1.hero-title .accent-unique { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 700; }
+.hero-desc { color: var(--text-muted); font-size: 1.05rem; line-height: 1.75; margin-bottom: 2rem; max-width: 460px; }
+.hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn-primary { background: var(--purple); color: #fff; padding: 13px 26px; border-radius: 10px; font-weight: 600; font-size: 14.5px; border: none; cursor: pointer; transition: all .25s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+.btn-primary:hover { background: var(--purple-light); transform: translateY(-2px); box-shadow: 0 10px 32px rgba(139,92,246,.4); }
+.btn-secondary { background: transparent; color: var(--text); padding: 13px 26px; border-radius: 10px; font-size: 14.5px; border: 1px solid var(--border); cursor: pointer; transition: all .25s; text-decoration: none; display: inline-flex; align-items: center; font-family: inherit; }
+.btn-secondary:hover { border-color: var(--purple); color: var(--purple-light); }
+/* ═══════════════════════════════════════
+   HERO — APP PREVIEW (PHONE MOCKUP)
+═══════════════════════════════════════ */
+.phone-mock-wrap { display: flex; flex-direction: column; align-items: center; }
+.phone-mock-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.16); color: var(--text-muted); padding: 5px 14px; border-radius: 100px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 1.1rem; }
+.phone-mock-badge .dot { width: 6px; height: 6px; background: var(--mint); border-radius: 50%; animation: pulse 2s infinite; }
+.phone-frame { width: 290px; background: #0a0d14; border-radius: 40px; padding: 14px; box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06); position: relative; transform: rotate(-7deg) scale(.96); opacity: 0; animation: phoneStraighten 1s cubic-bezier(.16,.9,.25,1) .2s forwards; }
+@keyframes phoneStraighten { to { transform: rotate(0deg) scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .phone-frame { animation: none; transform: none; opacity: 1; } }
+.phone-notch { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 90px; height: 22px; background: #0a0d14; border-radius: 0 0 14px 14px; z-index: 3; }
+.phone-screen { background: #0a0d16; background-image: radial-gradient(ellipse 320px 220px at 50% 0%, rgba(112,52,244,.16), transparent 70%); border-radius: 28px; overflow: hidden; position: relative; padding: 14px 16px 16px; min-height: 470px; }
+.phone-statusbar { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; color: var(--text); padding: 4px 4px 14px; }
+.phone-statusbar-icons { display: flex; align-items: center; gap: 5px; }
+.phone-statusbar-icons span { display: block; background: var(--text); border-radius: 1px; }
+.phone-statusbar-icons .sig { width: 14px; height: 8px; clip-path: polygon(0 100%, 25% 40%, 50% 60%, 75% 20%, 100% 0, 100% 100%); }
+.phone-statusbar-icons .wifi { width: 12px; height: 8px; border-radius: 6px 6px 0 0; }
+.phone-statusbar-icons .batt { width: 18px; height: 9px; border-radius: 2px; opacity: .9; }
+.phone-app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.phone-logo-box { display: flex; align-items: center; gap: 6px; }
+.phone-logo-box img { width: 22px; height: 22px; object-fit: contain; }
+.phone-logo { font-weight: 800; font-size: 16px; letter-spacing: -.3px; }
+.phone-logo em { color: var(--purple-light); font-style: normal; }
+.phone-bell { position: relative; width: 30px; height: 30px; border-radius: 9px; background: rgba(112,52,244,.12); border: 1px solid rgba(112,52,244,.3); display: flex; align-items: center; justify-content: center; color: var(--purple-light); }
+.phone-bell-dot { position: absolute; top: 6px; right: 7px; width: 6px; height: 6px; background: var(--pink); border-radius: 50%; border: 1.5px solid var(--surface); }
+.phone-section-label { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--text-dim); margin-bottom: .6rem; }
+.widget { background: rgba(130,120,145,.08); backdrop-filter: blur(10px); border: 1px solid rgba(140,130,160,.2); border-radius: 14px; margin-bottom: .7rem; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(20,15,30,.2); }
+.widget::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2.5px; background: linear-gradient(90deg, var(--purple-dark), var(--purple-light)); }
+.widget-label { display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: var(--purple-light); padding: 9px 12px 0; }
+.widget-label svg { flex-shrink: 0; }
+.widget-countdown-row { display: flex; gap: 10px; padding: 7px 12px 11px; align-items: center; }
+.widget-thumb { width: 54px; height: 54px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: var(--surface-2); }
+.widget-title { font-size: 13px; font-weight: 700; line-height: 1.3; }
+.widget-sub { font-size: 11px; color: var(--text-muted); margin: 2px 0 6px; }
+.widget-countdown-time { display: flex; gap: 4px; font-size: 16px; font-weight: 800; color: var(--purple-light); font-variant-numeric: tabular-nums; }
+.widget-countdown-time .unit { font-size: 10px; font-weight: 600; color: var(--text-dim); margin-right: 5px; }
+.widget-reminder-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 13px 11px; }
+.toggle { width: 34px; height: 20px; border-radius: 100px; background: var(--mint); position: relative; flex-shrink: 0; cursor: pointer; transition: background .25s; }
+.toggle .toggle-knob { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; background: #0d1f1a; transition: transform .25s; }
+.toggle.off { background: rgba(255,255,255,.14); }
+.toggle.off .toggle-knob { transform: translateX(-14px); background: rgba(255,255,255,.7); }
+.widget-saved { padding: 7px 13px 4px; }
+.widget-saved-header { display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 8px; color: var(--purple-light); }
+.widget-saved-count { background: rgba(112,52,244,.18); color: var(--purple-light); padding: 1px 8px; border-radius: 100px; font-size: 11px; text-transform: none; letter-spacing: 0; font-weight: 700; }
+.widget-saved-row { display: flex; align-items: center; gap: 9px; padding: 6px 0 9px; border-top: 1px solid rgba(112,52,244,.14); }
+.widget-saved-row:first-of-type { border-top: none; }
+.widget-saved-row img { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; background: var(--surface-2); flex-shrink: 0; }
+.widget-saved-info { flex: 1; min-width: 0; }
+.widget-saved-title { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.widget-saved-sub { font-size: 10.5px; color: var(--text-dim); }
+.widget-chip { font-size: 10px; font-weight: 700; color: var(--mint); background: rgba(105,226,193,.14); padding: 3px 8px; border-radius: 100px; flex-shrink: 0; }
+.phone-tabbar { display: flex; justify-content: space-around; align-items: center; margin-top: .9rem; padding-top: .9rem; border-top: 1px solid rgba(255,255,255,.07); }
+.phone-tabbar .tab { width: 20px; height: 20px; border-radius: 6px; background: rgba(255,255,255,.1); cursor: pointer; transition: background .2s, transform .2s; }
+.phone-tabbar .tab.active { background: var(--purple-light); transform: scale(1.1); }
+
+/* ═══════════════════════════════════════
+   CURATED STRIP
+═══════════════════════════════════════ */
+.curated-strip { display: none; background: linear-gradient(135deg, rgba(109,40,217,.14), rgba(139,92,246,.07)); border-top: 1px solid rgba(139,92,246,.2); border-bottom: 1px solid rgba(139,92,246,.2); padding: 2rem 2.5rem; }
+.curated-strip.visible { display: block; }
+.curated-inner { max-width: 1180px; margin: 0 auto; }
+.curated-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.curated-header h3 { font-family: Helvetica, Arial, sans-serif; font-size: 1.4rem; font-weight: 700; }
+.curated-header h3 em { color: var(--text); font-weight: 700; font-style: normal; }
+.curated-tag { background: var(--text); color: var(--bg); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; letter-spacing: .5px; text-transform: uppercase; }
+.curated-sub { color: var(--text-muted); font-size: 13px; margin-left: auto; }
+.curated-row { display: flex; gap: .875rem; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.curated-row::-webkit-scrollbar { display: none; }
+.curated-card { flex-shrink: 0; width: 260px; height: 175px; border-radius: 12px; overflow: hidden; position: relative; text-decoration: none; color: inherit; display: block; transition: transform .3s; border: 1px solid rgba(139,92,246,.25); }
+.curated-card:hover { transform: translateY(-4px); border-color: var(--purple); }
+.curated-score { position: absolute; top: 10px; right: 10px; background: rgba(105,226,193,.92); backdrop-filter: blur(8px); color: #0d1f1a; padding: 4px 10px; border-radius: 7px; font-size: 11px; font-weight: 700; }
+
+/* ═══════════════════════════════════════
+   FILTER PILLS
+═══════════════════════════════════════ */
+.filter-wrap { padding: 1.5rem 2.5rem; max-width: 1180px; margin: 0 auto; }
+.filter-row { display: flex; gap: .625rem; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.filter-row::-webkit-scrollbar { display: none; }
+.pill { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 7px 16px; border-radius: 100px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all .2s; font-family: inherit; }
+.pill.active { background: var(--text); border-color: transparent; color: var(--bg); }
+.pill:hover { background: rgba(255,255,255,.08); backdrop-filter: blur(6px); border-color: rgba(255,255,255,.22); color: var(--text); }
+
+/* ═══════════════════════════════════════
+   SECTION
+═══════════════════════════════════════ */
+.section { padding: 3rem 2.5rem; max-width: 1180px; margin: 0 auto; }
+.sec-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2rem; }
+.sec-title { font-family: Helvetica, Arial, sans-serif; font-size: 1.9rem; font-weight: 700; }
+.sec-title em { color: var(--text); font-weight: 700; font-style: normal; }
+.sec-title-purple, .sec-title-purple em { color: var(--purple-light); text-shadow: 0 0 30px rgba(112,52,244,.55), 0 0 60px rgba(112,52,244,.25); }
+.sec-sub { color: var(--text-muted); font-size: 13px; margin-top: 5px; }
+.see-all { color: var(--text-muted); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: color .2s; white-space: nowrap; }
+.see-all:hover { color: #fff; }
+
+/* ═══════════════════════════════════════
+   GRID — ALIGNED EDGES
+   Row 1-2 : 7 + 5 = 12
+   Row 3   : 4 + 4 + 4 = 12
+   Row 4   : 5 + 3 + 4 = 12
+   Row 5   : 6 + 6 = 12
+═══════════════════════════════════════ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: 220px 220px 210px 210px 210px;
+  gap: .875rem;
+}
+.card-gallery    { grid-column: 1 / 8;  grid-row: 1 / 3; }
+.card-theatre    { grid-column: 8 / 13; grid-row: 1 / 2; }
+.card-supper     { grid-column: 8 / 13; grid-row: 2 / 3; }
+.card-jazz       { grid-column: 1 / 5;  grid-row: 3 / 4; }
+.card-cinema     { grid-column: 5 / 9;  grid-row: 3 / 4; }
+.card-candle     { grid-column: 9 / 13; grid-row: 3 / 4; }
+.card-rave       { grid-column: 1 / 6;  grid-row: 4 / 5; }
+.card-philosophy { grid-column: 6 / 9;  grid-row: 4 / 5; }
+.card-museum     { grid-column: 9 / 13; grid-row: 4 / 5; }
+.card-swim       { grid-column: 1 / 7;  grid-row: 5 / 6; }
+.card-market     { grid-column: 7 / 13; grid-row: 5 / 6; }
+
+/* ═══════════════════════════════════════
+   CARD
+═══════════════════════════════════════ */
+.card { position: relative; border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: transform .3s, box-shadow .3s; text-decoration: none; color: inherit; display: block; }
+.card:hover { transform: translateY(-5px); box-shadow: 0 16px 48px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.14); }
+.card-bg { position: absolute; inset: 0; }
+.g1 { background: linear-gradient(135deg,#160836,#3a1260,#0d253d); }
+.g2 { background: linear-gradient(135deg,#0a1f3a,#1a3a20,#3a1a10); }
+.g3 { background: linear-gradient(135deg,#2a0a1e,#3d0d3d,#180828); }
+.g4 { background: linear-gradient(135deg,#0a2a1e,#1c2a0a,#2a1e0a); }
+.g5 { background: linear-gradient(135deg,#1e1e0a,#2d0a2d,#0a2a2a); }
+.g6 { background: linear-gradient(135deg,#2a1e0a,#1a0a2d,#0a1e2a); }
+.g7 { background: linear-gradient(135deg,#0a0a2d,#2a0a1a,#1a2a0a); }
+.g8 { background: linear-gradient(135deg,#1a2a2a,#0a1a3d,#2a0a2d); }
+.card-deco { position: absolute; font-size: 5rem; top: 50%; left: 50%; transform: translate(-50%,-60%); opacity: .06; pointer-events: none; }
+.card-gallery .card-deco { font-size: 8rem; }
+.card-ov { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.9) 0%, rgba(0,0,0,.15) 60%, transparent 100%); }
+.card-tint { position: absolute; inset: 0; background: linear-gradient(160deg, rgba(0,0,0,.5), rgba(0,0,0,.28)); transition: opacity .35s; pointer-events: none; }
+.card:hover .card-tint, .curated-card:hover .card-tint { opacity: 0; }
+.card-body { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.1rem 1.25rem; }
+.card-title { font-family: Helvetica, Arial, sans-serif; font-size: .95rem; font-weight: 700; line-height: 1.3; margin-bottom: 5px; }
+.card-gallery .card-title { font-size: 1.35rem; }
+.card-meta { display: flex; gap: 10px; color: rgba(255,255,255,.5); font-size: 11.5px; flex-wrap: wrap; }
+.card-price { position: absolute; top: 11px; right: 11px; background: rgba(0,0,0,.68); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.1); color: #fff; padding: 3px 10px; border-radius: 7px; font-size: 11.5px; font-weight: 600; }
+.tag { display: inline-block; background: rgba(255,255,255,.08); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.16); color: var(--text); padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; margin-right: 5px; margin-bottom: 8px; }
+.tag-outline { display: inline-block; border: 1px solid rgba(255,255,255,.22); color: var(--text-muted); padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+
+/* Match badge + tooltip — 3-tier personalisation colour coding */
+.match-badge { position: absolute; top: 11px; left: 11px; backdrop-filter: blur(8px); padding: 4px 9px; border-radius: 7px; font-size: 11px; font-weight: 700; display: none; align-items: center; gap: 4px; cursor: default; }
+.match-badge.show { display: flex; }
+.match-badge.tier-good { background: rgba(255,255,255,.2); color: var(--text); }
+.match-badge.tier-great { background: rgba(105,226,193,.92); color: #0d1f1a; }
+.match-badge.tier-perfect { background: rgba(112,52,244,.92); color: #fff; }
+.match-lock { flex-shrink: 0; }
+.curated-score.tier-low { background: rgba(255,255,255,.12); color: rgba(255,255,255,.65); }
+.curated-score.tier-good { background: rgba(255,255,255,.2); color: #fff; }
+.curated-score.tier-great { background: rgba(105,226,193,.92); color: #0d1f1a; }
+.curated-score.tier-perfect { background: rgba(112,52,244,.92); color: #fff; }
+.match-tooltip { position: absolute; bottom: calc(100% + 8px); left: 0; background: rgba(12,6,25,.97); border: 1px solid rgba(139,92,246,.4); border-radius: 10px; padding: 12px 14px; width: 220px; font-size: 12px; line-height: 1.65; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 20; white-space: normal; }
+.match-tooltip-title { font-weight: 700; color: var(--mint); margin-bottom: 6px; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; }
+.match-tooltip-item { color: var(--text-muted); display: flex; align-items: flex-start; gap: 5px; margin-bottom: 3px; }
+.match-tooltip-item::before { content: '·'; color: var(--text-muted); flex-shrink: 0; }
+.match-tooltip-item.lock-tip { color: var(--purple-light); margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(139,92,246,.25); }
+.match-tooltip-item.lock-tip::before { content: ''; }
+.match-badge:hover .match-tooltip { opacity: 1; }
+
+.card-save { position: absolute; top: 11px; right: 44px; background: rgba(0,0,0,.5); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.1); color: #fff; width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; opacity: 0; transition: opacity .2s; cursor: pointer; }
+.card:hover .card-save { opacity: 1; }
+.card-save.saved { opacity: 1 !important; background: rgba(139,92,246,.7); }
+
+/* ═══════════════════════════════════════
+   STATS
+═══════════════════════════════════════ */
+.stats { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 2.5rem; margin: 1.5rem 0; }
+.stats-inner { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 2rem; text-align: center; }
+.stat-n { font-family: Helvetica, Arial, sans-serif; font-size: 2.5rem; font-weight: 700; color: #ede8fb; }
+.stat-l { color: rgba(237,232,251,.65); font-size: 13px; margin-top: 4px; }
+
+/* ═══════════════════════════════════════
+   SCROLL ROW
+═══════════════════════════════════════ */
+.scroll-row { display: flex; gap: .875rem; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+.scroll-row::-webkit-scrollbar { display: none; }
+.sc-card { flex-shrink: 0; width: 250px; height: 330px; border-radius: var(--radius); overflow: hidden; position: relative; cursor: pointer; text-decoration: none; color: inherit; display: block; transition: transform .3s; }
+.sc-card:hover { transform: scale(1.025); }
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer { background: var(--surface); border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 3rem; }
+.foot-inner { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; }
+.foot-brand p { color: var(--text-muted); font-size: 13.5px; margin-top: 1rem; max-width: 270px; line-height: 1.75; }
+.foot-col h5 { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; }
+.foot-col ul { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+.foot-col a { color: var(--text-dim); text-decoration: none; font-size: 13.5px; transition: color .2s; }
+.foot-col a:hover { color: var(--purple-light); }
+.foot-bottom { max-width: 1180px; margin: 2rem auto 0; padding-top: 2rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: var(--text-dim); font-size: 13px; }
+
+/* ═══════════════════════════════════════
+   SIGN-UP POPUP
+═══════════════════════════════════════ */
+.su-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(10,13,20,0.97); backdrop-filter: blur(28px);
+  display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+}
+.su-overlay.hidden { display: none; }
+.su-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 26px; padding: 2.75rem 2.5rem 2rem;
+  max-width: 500px; width: 100%; position: relative; overflow: hidden;
+}
+.su-box::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #4c1d95, var(--purple), var(--purple-light));
+}
+.su-logo { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 0 auto 1.5rem; }
+.su-logo img { width: 26px; height: 26px; object-fit: contain; }
+.su-logo span { font-family: Arial, sans-serif; font-weight: 700; font-size: 14px; color: var(--text); letter-spacing: .3px; }
+.su-free-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.16); color: var(--text-muted); padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1.25rem; }
+.su-free-badge::before { content: '✦'; }
+.su-headline { font-family: Helvetica, Arial, sans-serif; font-size: 1.75rem; font-weight: 900; line-height: 1.2; text-align: center; margin-bottom: .6rem; }
+.su-headline em { color: var(--text); font-weight: 700; font-style: normal; }
+.su-sub { color: var(--text-muted); font-size: 13.5px; text-align: center; line-height: 1.65; margin-bottom: 1.75rem; }
+
+/* Tabs */
+.su-tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg); border-radius: 10px; padding: 4px; gap: 4px; margin-bottom: 1.75rem; border: 1px solid var(--border); }
+.su-tab { padding: 9px 10px; border-radius: 7px; border: none; background: none; color: var(--text-muted); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.su-tab:hover { color: var(--text); }
+.su-tab.active { background: var(--text); color: var(--bg); }
+
+/* Form */
+.su-form { display: none; }
+.su-form.active { display: block; animation: fadeUp .25s ease; }
+.su-field { margin-bottom: 1rem; }
+.su-field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; letter-spacing: .4px; }
+.su-field input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 11px 14px; color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: border-color .2s; }
+.su-field input:focus { border-color: var(--purple); }
+.su-field input::placeholder { color: var(--text-dim); }
+.su-cta { width: 100%; background: var(--text); color: var(--bg); border: none; padding: 13px; border-radius: 10px; font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .25s; margin-top: .5rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.su-cta:hover { background: var(--purple-light); transform: translateY(-1px); box-shadow: 0 8px 28px rgba(139,92,246,.4); }
+.su-note { text-align: center; color: var(--text-dim); font-size: 12px; margin-top: .875rem; line-height: 1.5; }
+
+/* Success state */
+.su-success { display: none; text-align: center; padding: .5rem 0; animation: fadeUp .35s ease; }
+.su-success.active { display: block; }
+.su-success-icon { font-size: 3rem; margin-bottom: 1rem; color: var(--mint); }
+.su-success h3 { font-family: Helvetica, Arial, sans-serif; font-size: 1.7rem; font-weight: 900; margin-bottom: .75rem; }
+.su-success h3 em { color: var(--text); font-weight: 700; font-style: normal; }
+.su-success p { color: var(--text-muted); font-size: 14px; line-height: 1.7; margin-bottom: 2rem; }
+
+.su-skip { text-align: center; color: var(--text-dim); font-size: 13px; margin-top: 1.25rem; cursor: pointer; transition: color .2s; }
+.su-skip:hover { color: var(--text-muted); }
+.su-divider { display: flex; align-items: center; gap: 1rem; margin: .875rem 0; color: var(--text-dim); font-size: 12px; }
+.su-divider::before, .su-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+@media (max-width: 900px) {
+  .hero-inner { grid-template-columns: 1fr; }
+  .phone-frame { width: 260px; }
+  .grid { grid-template-columns: repeat(6,1fr); grid-template-rows: repeat(8, 180px); }
+  .card-gallery    { grid-column: 1 / 7; grid-row: 1 / 3; }
+  .card-theatre    { grid-column: 1 / 4; grid-row: 3 / 4; }
+  .card-supper     { grid-column: 4 / 7; grid-row: 3 / 4; }
+  .card-jazz       { grid-column: 1 / 7; grid-row: 4 / 5; }
+  .card-cinema     { grid-column: 1 / 4; grid-row: 5 / 6; }
+  .card-candle     { grid-column: 4 / 7; grid-row: 5 / 6; }
+  .card-rave       { grid-column: 1 / 7; grid-row: 6 / 7; }
+  .card-philosophy { grid-column: 1 / 4; grid-row: 7 / 8; }
+  .card-museum     { grid-column: 4 / 7; grid-row: 7 / 8; }
+  .card-swim       { grid-column: 1 / 4; grid-row: 8 / 9; }
+  .card-market     { grid-column: 4 / 7; grid-row: 8 / 9; }
+  .nav-links { display: none; }
+  .foot-inner { grid-template-columns: 1fr 1fr; }
+  .stats-inner { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  SIGN-UP POPUP (shown first)                -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="su-overlay" id="suOverlay">
+  <div class="su-box">
+
+    <!-- Main sign-up view -->
+    <div id="suMain">
+      <div style="text-align:center">
+        <div class="su-logo"><img src="logo.png" alt="VeryU"><span>VeryU</span></div>
+        <div class="su-free-badge">Completely free to join</div>
+        <h2 class="su-headline">London's most <em>personal</em><br>experience platform</h2>
+        <p class="su-sub">Join the waitlist and we'll reach out with early access details.<br>Leave your contact details below — we'll take it from there.</p>
+      </div>
+
+      <!-- Tab switcher -->
+      <div class="su-tabs">
+        <button class="su-tab active" id="tabUser" onclick="switchTab('user')">
+           I'm looking for events
+        </button>
+        <button class="su-tab" id="tabOrg" onclick="switchTab('organiser')">
+           I'm an event organiser
+        </button>
+      </div>
+
+      <!-- User form -->
+      <div class="su-form active" id="formUser">
+        <div class="su-field">
+          <label>First name</label>
+          <input type="text" id="userName" placeholder="Your first name">
+        </div>
+        <div class="su-field">
+          <label>Email address</label>
+          <input type="email" id="userEmail" placeholder="you@example.com">
+        </div>
+        <button class="su-cta" onclick="submitSignup('user')">
+          Join the Waitlist — It's Free
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <p class="su-note">No spam. Just early access, niche London picks, and updates that matter.</p>
+      </div>
+
+      <!-- Organiser form -->
+      <div class="su-form" id="formOrganiser">
+        <div class="su-field">
+          <label>Your name</label>
+          <input type="text" id="orgName" placeholder="Your full name">
+        </div>
+        <div class="su-field">
+          <label>Email address</label>
+          <input type="email" id="orgEmail" placeholder="you@yourorganisation.com">
+        </div>
+        <div class="su-field">
+          <label>Organisation or event name</label>
+          <input type="text" id="orgCompany" placeholder="e.g. The Vaults, Secret Cinema…">
+        </div>
+        <button class="su-cta" onclick="submitSignup('organiser')">
+          Request a Partnership
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <p class="su-note">We'll be in touch within 48 hours with partnership details and audience data.</p>
+      </div>
+
+      <div class="su-skip" onclick="skipSignup()">Just browsing for now — skip this</div>
+    </div>
+
+    <!-- Success state (hidden until submit) -->
+    <div class="su-success" id="suSuccess">
+      <div class="su-success-icon">✦</div>
+      <h3>You're on <em>the list</em></h3>
+      <p id="suSuccessMsg">We'll reach out soon with early access details. In the meantime, tell us what you're into and we'll start curating your London.</p>
+      <button class="su-cta" onclick="proceedAfterSignup()">
+        Personalise My Feed →
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  ONBOARDING OVERLAY                         -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="ob-overlay" id="onboarding">
+  <div class="ob-box">
+
+    <!-- Step 1 -->
+    <div class="ob-step active" id="obStep1">
+      <div class="ob-progress-track"><div class="ob-progress-fill" style="width:33%"></div></div>
+      <div class="ob-step-label">Step 1 of 3 · Your Experience</div>
+      <h2>What types of <em>experiences</em> interest you most?</h2>
+      <p>Select all that apply</p>
+      <div class="ob-chips" id="catChips">
+        <div class="ob-chip" data-val="detective"> Mystery & Detective</div>
+        <div class="ob-chip" data-val="immersive-theatre"> Immersive Theatre</div>
+        <div class="ob-chip" data-val="escape-puzzle"> Escape & Puzzle Adventures</div>
+        <div class="ob-chip" data-val="immersive-cocktail"> Immersive Cocktail Experiences</div>
+        <div class="ob-chip" data-val="experiential-dining"> Experiential Dining</div>
+        <div class="ob-chip" data-val="fantasy"> Fantasy & Fiction Worlds</div>
+        <div class="ob-chip" data-val="horror"> Horror & Dark Experiences</div>
+        <div class="ob-chip" data-val="interactive-art"> Interactive Art & Installations</div>
+        <div class="ob-chip" data-val="real-life-games"> Real-Life Games</div>
+        <div class="ob-chip" data-val="magic"> Magic & Illusion</div>
+        <div class="ob-chip" data-val="scifi"> Sci-Fi & Futuristic</div>
+        <div class="ob-chip" data-val="historical">⏳ Time Travel & Historical</div>
+      </div>
+      <div class="ob-footer">
+        <span></span>
+        <button class="ob-next-btn" onclick="goStep(2)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ob-step" id="obStep2">
+      <div class="ob-progress-track"><div class="ob-progress-fill" style="width:66%"></div></div>
+      <div class="ob-step-label">Step 2 of 3 · Your Schedule</div>
+      <h2>When do you usually <em>attend</em> events?</h2>
+      <p>Select all that apply</p>
+      <div class="ob-chips" id="timeChips">
+        <div class="ob-chip" data-val="weekday-morning"> Weekday Mornings</div>
+        <div class="ob-chip" data-val="weekday-afternoon"> Weekday Afternoons</div>
+        <div class="ob-chip" data-val="weekday-evening"> Weekday Evenings</div>
+        <div class="ob-chip" data-val="friday-night"> Friday Nights</div>
+        <div class="ob-chip" data-val="weekend"> Weekend</div>
+      </div>
+      <div class="ob-footer">
+        <button class="ob-back" onclick="goStep(1)">← Back</button>
+        <button class="ob-next-btn" onclick="goStep(3)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ob-step" id="obStep3">
+      <div class="ob-progress-track"><div class="ob-progress-fill" style="width:100%"></div></div>
+      <div class="ob-step-label">Step 3 of 3 · Your Range</div>
+      <h2>How far will you <em>travel</em> for a great experience?</h2>
+      <p>Pick the one that fits you best</p>
+      <div class="ob-options" id="distanceOpts">
+        <div class="ob-option" data-val="under-30" onclick="selectOne(this,'distanceOpts')">
+          <div class="ob-opt-icon"></div><div class="ob-opt-label">Under 30 minutes</div>
+        </div>
+        <div class="ob-option" data-val="up-to-1h" onclick="selectOne(this,'distanceOpts')">
+          <div class="ob-opt-icon"></div><div class="ob-opt-label">Up to 1 hour</div>
+        </div>
+        <div class="ob-option" data-val="up-to-2h" onclick="selectOne(this,'distanceOpts')">
+          <div class="ob-opt-icon"></div><div class="ob-opt-label">Up to 2 hours</div>
+        </div>
+      </div>
+      <div class="ob-footer">
+        <button class="ob-back" onclick="goStep(2)">← Back</button>
+        <button class="ob-next-btn" onclick="runPersonalise()">Find My London ✦</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="ob-step" id="obLoading">
+      <div class="ob-loading">
+        <div class="ob-spinner"></div>
+        <h2>Curating your <em>London</em>…</h2>
+        <p>Matching 2,400+ experiences to your taste profile</p>
+      </div>
+    </div>
+
+    <!-- Tribe Reveal -->
+    <div class="ob-step" id="obReveal">
+      <div class="ob-reveal">
+        <span class="ob-reveal-emoji" id="revealEmoji"></span>
+        <div class="ob-reveal-eyebrow">You are a...</div>
+        <div class="ob-reveal-title" id="revealTitle">The Detective</div>
+        <div class="ob-reveal-desc" id="revealDesc">You don't want to be told the story — you want to solve it.</div>
+        <div class="ob-reveal-stats">
+          <span id="revealCount">✦ 8 experiences found for you</span>
+          <span id="revealScore"> Up to 96% match</span>
+        </div>
+        <button class="ob-next-btn" onclick="enterFeed()">Enter My London →</button>
+      </div>
+    </div>
+
+    <div class="ob-skip" id="obSkipBtn" onclick="skipOnboarding()">Skip — show me everything</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  EVENT ORGANISER ONBOARDING OVERLAY         -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="ob-overlay hidden" id="orgOnboarding">
+  <div class="ob-box">
+
+    <!-- Org Step 1 -->
+    <div class="ob-step active" id="orgStep1">
+      <div class="ob-progress-track"><div class="ob-progress-fill" style="width:20%"></div></div>
+      <div class="ob-step-label">Step 1 of 5 · Your Event</div>
+      <h2>Which category best describes <em>your event</em>?</h2>
+      <p>Select all that apply</p>
+      <div class="ob-chips" id="orgCatChips">
+        <div class="ob-chip" data-val="detective"> Mystery & Detective</div>
+        <div class="ob-chip" data-val="immersive-theatre"> Immersive Theatre</div>
+        <div class="ob-chip" data-val="escape-puzzle"> Escape & Puzzle Adventures</div>
+        <div class="ob-chip" data-val="immersive-cocktail"> Immersive Cocktail Experiences</div>
+        <div class="ob-chip" data-val="experiential-dining"> Experiential Dining</div>
+        <div class="ob-chip" data-val="fantasy"> Fantasy & Fiction Worlds</div>
+        <div class="ob-chip" data-val="horror"> Horror & Dark Experiences</div>
+        <div class="ob-chip" data-val="interactive-art"> Interactive Art & Installations</div>
+        <div class="ob-chip" data-val="real-life-games"> Real-Life Games</div>
+        <div class="ob-chip" data-val="magic"> Magic & Illusion</div>
+        <div class="ob-chip" data-val="scifi"> Sci-Fi & Futuristic</div>
+        <div class="ob-chip" data-val="historical">⏳ Time Travel & Historical</div>
+        <div class="ob-chip" data-val="other"> Other</div>
+      </div>
+      <div class="ob-other-wrap" id="orgCatOtherWrap" style="display:none;margin-top:.75rem">
+        <input type="text" id="orgCatOther" placeholder="Tell us what kind of event it is" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;">
+      </div>
+      <div class="ob-footer">
+        <span></span>
+        <button class="ob-next-btn" onclick="goOrgStep(2)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Org Step 2 -->
+    <div class="ob-step" id="orgStep2">
+      <div class="ob-progress-track"><div class="ob-progress-fill" style="width:40%"></div></div>
+      <div class="ob-step-label">Step 2 of 5 · Your Goal</div>
+      <h2>What's your biggest goal for <em>joining the platform</em>?</h2>
+      <p>Pick the one that matters most right now</p>
+      <div class="ob-options" id="orgGoalOpts" style="grid-template-columns:1fr">
+        <div class="ob-option" data-val="sell-more-tickets" onclick="selectOne(this,'orgGoalOpts')"><div class="ob-opt-label">Sell more tickets</div></div>
+        <div class="ob-option" data-val="reach-new-audiences" onclick="selectOne(this,'orgGoalOpts')"><div class="ob-opt-label">Reach new audiences</div></div>
+        <div class="ob-option" data-val="build-community" onclick="selectOne(this,'orgGoalOpts')"><div class="ob-opt-label">Build a community</div></div>
+        <div class="ob-option" data-val="repeat-visitors" onclick="selectOne(this,'orgGoalOpts')"><div class="ob-opt-label">Increase repeat visitors</div></div>
+        <div class="ob-option" data-val="promote-new-concept" onclick="selectOne(this,'orgGoalOpts')"><div class="ob-opt-label">Promote a new event concept</div></div>
+        <div class="ob-option" data-val="test-demand" onclick="selectOne(this,'orgGoalOpts')"><div class="ob-opt-label">Test demand for new experiences</div></div>
+      </div>
+      <div class="ob-footer">
+        <button class="ob-back" onclick="goOrgStep(1)">← Back</button>
+        <button class="ob-next-btn" onclick="goOrgStep(3)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Org Step 3 -->
+    <div class="ob-step" id="orgStep3">
+      <div class="ob-progress-track"><div class="ob-progress-fill" style="width:60%"></div></div>
+      <div class="ob-step-label">Step 3 of 5 · Your Frequency</div>
+      <h2>How many events do you <em>typically run</em>?</h2>
+      <div class="ob-options" id="orgFreqOpts" style="grid-template-columns:1fr">
+        <div class="ob-option" data-val="one-off" onclick="selectOne(this,'orgFreqOpts')"><div class="ob-opt-label">One-off events</div></div>
+        <div class="ob-option" data-val="monthly" onclick="selectOne(this,'orgFreqOpts')"><div class="ob-opt-label">Monthly</div></div>
+        <div class="ob-option" data-val="several-per-month" onclick="selectOne(this,'orgFreqOpts')"><div class="ob-opt-label">Several per month</div></div>
+        <div class="ob-option" data-val="weekly" onclick="selectOne(this,'orgFreqOpts')"><div class="ob-opt-label">Weekly</div></div>
+        <div class="ob-option" data-val="multiple-per-week" onclick="selectOne(this,'orgFreqOpts')"><div class="ob-opt-label">Multiple events per week</div></div>
+      </div>
+      <div class="ob-footer">
+        <button class="ob-back" onclick="goOrgStep(2)">← Back</button>
+        <button class="ob-next-btn" onclick="goOrgStep(4)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Org Step 4 -->
+    <div class="ob-step" id="orgStep4">
+      <div class="ob-progress-track"><div class="ob-progress-fill" style="width:80%"></div></div>
+      <div class="ob-step-label">Step 4 of 5 · Pricing</div>
+      <h2>Which pricing model would you be most <em>open to</em>?</h2>
+      <div class="ob-options" id="orgPricingOpts" style="grid-template-columns:1fr">
+        <div class="ob-option" data-val="subscription" onclick="selectOne(this,'orgPricingOpts')"><div class="ob-opt-label">Monthly subscription</div></div>
+        <div class="ob-option" data-val="commission" onclick="selectOne(this,'orgPricingOpts')"><div class="ob-opt-label">Commission on tickets sold</div></div>
+        <div class="ob-option" data-val="fixed-fee" onclick="selectOne(this,'orgPricingOpts')"><div class="ob-opt-label">Fixed fee per listed event</div></div>
+        <div class="ob-option" data-val="pay-per-lead" onclick="selectOne(this,'orgPricingOpts')"><div class="ob-opt-label">Pay only for customer leads</div></div>
+        <div class="ob-option" data-val="hybrid" onclick="selectOne(this,'orgPricingOpts')"><div class="ob-opt-label">Hybrid model (subscription + commission)</div></div>
+        <div class="ob-option" data-val="open-to-discuss" onclick="selectOne(this,'orgPricingOpts')"><div class="ob-opt-label">Open to discussing options</div></div>
+      </div>
+      <div class="ob-footer">
+        <button class="ob-back" onclick="goOrgStep(3)">← Back</button>
+        <button class="ob-next-btn" onclick="goOrgStep(5)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Org Step 5 -->
+    <div class="ob-step" id="orgStep5">
+      <div class="ob-progress-track"><div class="ob-progress-fill" style="width:100%"></div></div>
+      <div class="ob-step-label">Step 5 of 5 · Discovery</div>
+      <h2>How do people currently <em>discover</em> your events?</h2>
+      <p>Select all that apply</p>
+      <div class="ob-chips" id="orgDiscoveryChips">
+        <div class="ob-chip" data-val="social-media"> Social media</div>
+        <div class="ob-chip" data-val="word-of-mouth"> Word of mouth</div>
+        <div class="ob-chip" data-val="search"> Google/Search</div>
+        <div class="ob-chip" data-val="eventbrite"> Eventbrite</div>
+        <div class="ob-chip" data-val="fever"> Fever</div>
+        <div class="ob-chip" data-val="designmynight"> DesignMyNight</div>
+        <div class="ob-chip" data-val="partnerships"> Partnerships</div>
+        <div class="ob-chip" data-val="other"> Other</div>
+      </div>
+      <div class="ob-other-wrap" id="orgDiscoveryOtherWrap" style="display:none;margin-top:.75rem">
+        <input type="text" id="orgDiscoveryOther" placeholder="Where else do people find you?" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;">
+      </div>
+      <div class="ob-footer">
+        <button class="ob-back" onclick="goOrgStep(4)">← Back</button>
+        <button class="ob-next-btn" onclick="submitOrgOnboarding()">Submit ✦</button>
+      </div>
+    </div>
+
+    <!-- Org Done -->
+    <div class="ob-step" id="orgDone">
+      <div class="ob-reveal">
+        <span class="ob-reveal-emoji">🤝</span>
+        <div class="ob-reveal-eyebrow">Thank you</div>
+        <div class="ob-reveal-title">We've got your details</div>
+        <div class="ob-reveal-desc">Our partnerships team will review your event and reach out within 48 hours with next steps.</div>
+        <button class="ob-next-btn" onclick="closeOrgOnboarding()">Explore VeryU →</button>
+      </div>
+    </div>
+
+    <div class="ob-skip" onclick="closeOrgOnboarding()">Skip for now — I'll fill this in later</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  NAV                                        -->
+<!-- ═══════════════════════════════════════════ -->
+<nav>
+  <div class="nav-logo-box"><img src="logo.png" alt="VeryU"><span>VeryU</span></div>
+  <ul class="nav-links">
+    <li><a href="#">Discover</a></li>
+    <li><a href="#">This Week</a></li>
+    <li><a href="#">Neighbourhoods</a></li>
+    <li><a href="#">Collections</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="tribe-badge" id="tribeBadge" onclick="resetPrefs()">
+      <span class="tribe-dot"></span>
+      <span id="tribeBadgeLabel">Underground Explorer</span> · Edit
+    </div>
+    <button class="btn-ghost">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      Search London…
+    </button>
+    <button class="btn-ghost" onclick="openWaitlist('organiser')">For Organisers</button>
+    <button class="btn-purple" onclick="openWaitlist('user')">Join Free</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  HERO                                       -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-badge"><span class="dot"></span>London's Hidden Side</div>
+      <h1 class="hero-title">Discover <em class="accent-unique">Unique</em><br>experiences<br>made for <em>you</em></h1>
+      <p class="hero-desc">Skip the tourist traps. VeryU curates underground concerts, secret supper clubs, immersive art and everything in between — matched to your taste.</p>
+      <div class="hero-ctas">
+        <button class="btn-primary" onclick="openWaitlist('user')">Join the Waitlist <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+        <a href="#discover" class="btn-secondary">Explore Now</a>
+      </div>
+      <button onclick="openWaitlist('organiser')" style="background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px;margin-top:.875rem;padding:0;">Running events in London? Partner with us →</button>
+    </div>
+    <div class="phone-mock-wrap">
+      <div class="phone-mock-badge"><span class="dot"></span>App Preview — Coming Soon</div>
+      <div class="phone-frame">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="phone-statusbar">
+            <span>9:41</span>
+            <div class="phone-statusbar-icons"><span class="sig"></span><span class="wifi"></span><span class="batt"></span></div>
+          </div>
+          <div class="phone-app-header">
+            <span class="phone-logo-box"><img src="logo.png" alt="VeryU"><span class="phone-logo">Very<em>U</em></span></span>
+            <span class="phone-bell"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="phone-bell-dot"></span></span>
+          </div>
+          <div class="phone-section-label">Your Week</div>
+          <div class="widget widget-countdown">
+            <div class="widget-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Countdown</div>
+            <div class="widget-countdown-row">
+              <img class="widget-thumb" src="https://cdn.prod.website-files.com/67111d8f1fd87729671c7475/673dd8319bed3f1dadf8dd3e_Screenshot%202024-11-20%20at%2012.38.00.webp" alt="" loading="lazy" onerror="this.style.display='none'">
+              <div>
+                <div class="widget-title">The Traitors: Live Experience</div>
+                <div class="widget-sub">Sat 4 Jul · Covent Garden</div>
+                <div class="widget-countdown-time" id="phoneCountdown"><span id="pcD">—</span><span class="unit">d</span><span id="pcH">—</span><span class="unit">h</span><span id="pcM">—</span><span class="unit">m</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="widget widget-reminder">
+            <div class="widget-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Reminders</div>
+            <div class="widget-reminder-row">
+              <div>
+                <div class="widget-title">Remind me</div>
+                <div class="widget-sub" style="margin:2px 0 0;">1 hour before start</div>
+              </div>
+              <span class="toggle"><span class="toggle-knob"></span></span>
+            </div>
+          </div>
+          <div class="widget widget-saved">
+            <div class="widget-saved-header"><span>♡ Saved</span><span class="widget-saved-count">3</span></div>
+            <div class="widget-saved-row">
+              <img src="https://sensas-experience.com/_astro/PYC02522_2_pkzvww_Z12Pat9.webp" alt="" loading="lazy" onerror="this.style.display='none'">
+              <div class="widget-saved-info"><div class="widget-saved-title">SENSAS London</div><div class="widget-saved-sub">Vauxhall</div></div>
+              <span class="widget-chip">Tomorrow</span>
+            </div>
+            <div class="widget-saved-row">
+              <img src="https://hexmoor.co.uk/wp-content/uploads/2026/04/HexmoorFFEvent-0209-scaled-aspect-ratio-4-3-scaled-2-1-1536x1152.jpg" alt="" loading="lazy" onerror="this.style.display='none'">
+              <div class="widget-saved-info"><div class="widget-saved-title">Hexmoor</div><div class="widget-saved-sub">Hackney Rd</div></div>
+              <span class="widget-chip">5 days</span>
+            </div>
+          </div>
+          <div class="phone-tabbar">
+            <span class="tab active"></span><span class="tab"></span><span class="tab"></span><span class="tab"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  CURATED FOR YOU                            -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="curated-strip" id="curatedStrip">
+  <div class="curated-inner">
+    <div class="curated-header">
+      <h3>Curated <em>for You</em></h3>
+      <span class="curated-tag">✦ Personalised</span>
+      <span class="curated-sub" id="curatedSub">Based on your preferences</span>
+    </div>
+    <div class="curated-row" id="curatedRow"></div>
+  </div>
+</div>
+
+<!-- FILTER PILLS -->
+<div class="filter-wrap">
+  <div class="filter-row">
+    <button class="pill active" data-filter="all">✦ All</button>
+    <button class="pill" data-filter="music"> Music</button>
+    <button class="pill" data-filter="art"> Art</button>
+    <button class="pill" data-filter="food"> Food & Drink</button>
+    <button class="pill" data-filter="film"> Film</button>
+    <button class="pill" data-filter="theatre"> Theatre</button>
+    <button class="pill" data-filter="outdoor"> Outdoor</button>
+    <button class="pill" data-filter="talks"> Talks</button>
+    <button class="pill" data-filter="nightlife"> Nightlife</button>
+    <button class="pill" data-filter="markets"> Markets</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  ACTIVITY GRID                              -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="section" id="discover">
+  <div class="sec-header">
+    <div>
+      <h2 class="sec-title sec-title-purple">This Week in <em>London</em></h2>
+      <p class="sec-sub" id="gridSub">Hand-picked by our curators · Updated daily</p>
+    </div>
+    <a href="#" class="see-all">View all →</a>
+  </div>
+
+  <div class="grid">
+
+    <!-- Row 1–2: Gallery (7 cols, 2 rows) + Theatre + Supper (5 cols each) -->
+    <a href="sensas.html" class="card card-gallery" data-cat="wellness" data-vibe="evening" data-experience="real-life-games">
+      <div class="card-bg g2"><div class="card-deco"></div></div>
+      <img src="https://sensas-experience.com/_astro/PYC02522_2_pkzvww_Z12Pat9.webp" alt="SENSAS London" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="match-badge"><span class="match-pct"></span><div class="match-tooltip"><div class="match-tooltip-title">Why we picked this</div><div class="match-reason-list"></div></div></div>
+      <div class="card-save">♡</div><div class="card-price">From £38</div>
+      <div class="card-body">
+        <div><span class="tag">Real-Life Games</span><span class="tag-outline">Multi-Sensory</span></div>
+        <div class="card-title">SENSAS London: Multi-Sensory Team Challenge</div>
+        <div class="card-meta"><span>Vauxhall</span></div>
+      </div>
+    </a>
+
+    <a href="sherlock.html" class="card card-theatre" data-cat="theatre" data-vibe="evening" data-experience="detective">
+      <div class="card-bg g3"><div class="card-deco"></div></div>
+      <img src="https://www.attractiontickets.com/sites/default/files/styles/unified_gallery_image_tablet/public/2025-02/427078-atd.jpg.jpg?itok=bVabKJ6q" alt="Sherlock: The Official Live Game" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="match-badge"><span class="match-pct"></span><div class="match-tooltip"><div class="match-tooltip-title">Why we picked this</div><div class="match-reason-list"></div></div></div>
+      <div class="card-save">♡</div><div class="card-price">From £30</div>
+      <div class="card-body">
+        <div><span class="tag"> Theatre</span><span class="tag-outline">Immersive</span></div>
+        <div class="card-title">Sherlock: The Official Live Game</div>
+        <div class="card-meta"><span> Shepherd's Bush</span><span> Tue–Sun</span></div>
+      </div>
+    </a>
+
+    <a href="gordons-wine-bar.html" class="card card-supper" data-cat="food" data-vibe="evening">
+      <div class="card-bg g5"><div class="card-deco"></div></div>
+      <img src="https://www.gordonswinebar.com/propeller/uploads/2026/02/banner.jpg?format=auto" alt="Gordon's Wine Bar" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="match-badge"><span class="match-pct"></span><div class="match-tooltip"><div class="match-tooltip-title">Why we picked this</div><div class="match-reason-list"></div></div></div>
+      <div class="card-save">♡</div>
+      <div class="card-body">
+        <div><span class="tag"> Food</span><span class="tag-outline">Since 1890</span></div>
+        <div class="card-title">Gordon's Wine Bar: London's Oldest Cellar</div>
+        <div class="card-meta"><span> Villiers Street</span></div>
+      </div>
+    </a>
+
+    <!-- Row 3: Jazz + Cinema + Candle (4+4+4) -->
+    <a href="traitors-live.html" class="card card-jazz" data-cat="talks" data-vibe="evening" data-experience="real-life-games">
+      <div class="card-bg g1"><div class="card-deco"></div></div>
+      <img src="https://cdn.prod.website-files.com/67111d8f1fd87729671c7475/673dd8319bed3f1dadf8dd3e_Screenshot%202024-11-20%20at%2012.38.00.webp" alt="The Traitors: Live Experience" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="match-badge"><span class="match-pct"></span><div class="match-tooltip"><div class="match-tooltip-title">Why we picked this</div><div class="match-reason-list"></div></div></div>
+      <div class="card-save">♡</div><div class="card-price">£29.50</div>
+      <div class="card-body">
+        <div><span class="tag">Real-Life Games</span><span class="tag-outline">Social Deduction</span></div>
+        <div class="card-title">The Traitors: Live Experience</div>
+        <div class="card-meta"><span>Covent Garden</span></div>
+      </div>
+    </a>
+
+    <a href="big-london-bake.html" class="card card-cinema" data-cat="food" data-vibe="weekend" data-experience="experiential-dining">
+      <div class="card-bg g3"><div class="card-deco"></div></div>
+      <img src="https://images.squarespace-cdn.com/content/v1/62fa5183720e5639a999d37f/0e8a1321-939a-4098-a24b-66b1feb4a3ef/BB_East_webres-49.jpg" alt="The Big London Bake" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="match-badge"><span class="match-pct"></span><div class="match-tooltip"><div class="match-tooltip-title">Why we picked this</div><div class="match-reason-list"></div></div></div>
+      <div class="card-save">♡</div><div class="card-price">From £32</div>
+      <div class="card-body">
+        <div><span class="tag"> Food</span><span class="tag-outline">Bake-Off Style</span></div>
+        <div class="card-title">The Big London Bake: East</div>
+        <div class="card-meta"><span> Haggerston</span></div>
+      </div>
+    </a>
+
+    <a href="shakespeare-candlelight.html" class="card card-candle" data-cat="theatre" data-vibe="date" data-experience="immersive-theatre">
+      <div class="card-bg g8"><div class="card-deco"></div></div>
+      <img src="https://images.squarespace-cdn.com/content/v1/525bd8b5e4b0daa056d3ae62/343592b7-3937-4103-91ed-b437a47c257a/SHAKESPEARE+BY+CANDLELIGHT+2.png" alt="Shakespeare by Candlelight" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="match-badge"><span class="match-pct"></span><div class="match-tooltip"><div class="match-tooltip-title">Why we picked this</div><div class="match-reason-list"></div></div></div>
+      <div class="card-body">
+        <div><span class="tag"> Theatre</span></div>
+        <div class="card-title">Shakespeare by Candlelight</div>
+        <div class="card-meta"><span> Bankside</span></div>
+      </div>
+    </a>
+
+    <!-- Row 4: Rave + Philosophy + Museum (5+3+4) -->
+    <a href="monopoly.html" class="card card-rave" data-cat="nightlife" data-vibe="evening" data-experience="real-life-games">
+      <div class="card-bg g6"><div class="card-deco"></div></div>
+      <img src="https://monopolylifesized.com/app/uploads/2024/05/about-monopoly-1000x600.jpg" alt="Monopoly Lifesized" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="match-badge"><span class="match-pct"></span><div class="match-tooltip"><div class="match-tooltip-title">Why we picked this</div><div class="match-reason-list"></div></div></div>
+      <div class="card-save">♡</div><div class="card-price">From £54</div>
+      <div class="card-body">
+        <div><span class="tag"> Nightlife</span><span class="tag-outline">Game Night</span></div>
+        <div class="card-title">Monopoly Lifesized: Life-Sized Board Game</div>
+        <div class="card-meta"><span> Tottenham Court Road</span><span> Daily</span></div>
+      </div>
+    </a>
+
+    <a href="the-end.html" class="card card-philosophy" data-cat="theatre" data-vibe="evening" data-experience="escape-puzzle">
+      <div class="card-bg g7"><div class="card-deco"></div></div>
+      <img src="https://images.squarespace-cdn.com/content/v1/525bd8b5e4b0daa056d3ae62/96dcf323-b805-4fc2-9bc3-74c1fe5768cf/Untitled+design+%287%29.png" alt="The End" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="match-badge"><span class="match-pct"></span><div class="match-tooltip"><div class="match-tooltip-title">Why we picked this</div><div class="match-reason-list"></div></div></div>
+      <div class="card-body">
+        <div><span class="tag"> Theatre</span></div>
+        <div class="card-title">The End: Survive the Final Days</div>
+        <div class="card-meta"><span> SE1</span></div>
+      </div>
+    </a>
+
+    <a href="shop-of-mortals-and-fools.html" class="card card-museum" data-cat="theatre" data-vibe="evening" data-experience="immersive-theatre">
+      <div class="card-bg g1"><div class="card-deco"></div></div>
+      <img src="https://images.squarespace-cdn.com/content/v1/525bd8b5e4b0daa056d3ae62/f237ad4e-fbfb-404d-bdc7-1258aa7211f2/JL1_0334.jpg" alt="The Shop of Mortals and Fools" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="match-badge"><span class="match-pct"></span><div class="match-tooltip"><div class="match-tooltip-title">Why we picked this</div><div class="match-reason-list"></div></div></div>
+      <div class="card-body">
+        <div><span class="tag"> Theatre</span></div>
+        <div class="card-title">The Shop of Mortals and Fools</div>
+        <div class="card-meta"><span> SE1</span></div>
+      </div>
+    </a>
+
+    <!-- Row 5: Swim + Market (6+6) -->
+    <a href="skuna-hot-tub.html" class="card card-swim" data-cat="outdoor" data-vibe="daytime">
+      <div class="card-bg g4"><div class="card-deco"></div></div>
+      <img src="https://images.squarespace-cdn.com/content/v1/6899d635d34b9245422f0a44/30da8700-1d73-47c0-b7ee-a53a9a796abe/hot-tub%2851%29.jpg" alt="Skuna Hot Tub Boat" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="match-badge"><span class="match-pct"></span><div class="match-tooltip"><div class="match-tooltip-title">Why we picked this</div><div class="match-reason-list"></div></div></div>
+      <div class="card-price">From £45</div>
+      <div class="card-body">
+        <div><span class="tag"> Outdoor</span></div>
+        <div class="card-title">Skuna Hot Tub Boat, Canary Wharf</div>
+        <div class="card-meta"><span> Canary Wharf</span><span>75 min cruise</span></div>
+      </div>
+    </a>
+
+    <a href="crystal-maze.html" class="card card-market" data-cat="film" data-vibe="weekend" data-experience="real-life-games">
+      <div class="card-bg g2"><div class="card-deco"></div></div>
+      <img src="https://the-crystal-maze.com/media/cvjmior4/cm_2017_dome.jpg" alt="The Crystal Maze LIVE Experience" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="match-badge"><span class="match-pct"></span><div class="match-tooltip"><div class="match-tooltip-title">Why we picked this</div><div class="match-reason-list"></div></div></div>
+      <div class="card-price">From £79</div>
+      <div class="card-body">
+        <div><span class="tag">Real-Life Games</span></div>
+        <div class="card-title">The Crystal Maze LIVE Experience</div>
+        <div class="card-meta"><span>Shaftesbury Avenue</span></div>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stats-inner">
+    <div><div class="stat-n">2,400+</div><div class="stat-l">Niche experiences curated</div></div>
+    <div><div class="stat-n">38</div><div class="stat-l">London neighbourhoods covered</div></div>
+    <div><div class="stat-n">94%</div><div class="stat-l">Users discover something new weekly</div></div>
+    <div><div class="stat-n">Free</div><div class="stat-l">Always free to browse</div></div>
+  </div>
+</div>
+
+<!-- TRENDING -->
+<section class="section">
+  <div class="sec-header">
+    <div>
+      <h2 class="sec-title">Trending <em>Now</em></h2>
+      <p class="sec-sub">What Londoners are saving this week</p>
+    </div>
+    <a href="#" class="see-all">See all →</a>
+  </div>
+  <div class="scroll-row">
+    <a href="hexmoor.html" class="sc-card card" data-cat="nightlife" data-vibe="evening" data-experience="immersive-cocktail">
+      <div class="card-bg g4" style="position:absolute;inset:0"></div>
+      <img src="https://hexmoor.co.uk/wp-content/uploads/2026/04/HexmoorFFEvent-0209-scaled-aspect-ratio-4-3-scaled-2-1-1536x1152.jpg" alt="Hexmoor: Wizarding Prison" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="card-price">From £56.50</div>
+      <div class="card-body"><div><span class="tag">Immersive Cocktail</span></div><div class="card-title">Hexmoor: Wizarding Prison</div><div class="card-meta"><span>Hackney Rd</span></div></div>
+    </a>
+    <a href="alcotraz.html" class="sc-card card" data-cat="nightlife" data-vibe="evening" data-experience="immersive-cocktail">
+      <div class="card-bg g6" style="position:absolute;inset:0"></div>
+      <img src="https://alcotraz.co.uk/wp-content/uploads/2025/11/Alcotraz2024PR-0057-scaled-aspect-ratio-4-3-2-scaled.jpg" alt="Alcotraz London" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="card-price">From £51</div>
+      <div class="card-body"><div><span class="tag">Immersive Cocktail</span></div><div class="card-title">Alcotraz London</div><div class="card-meta"><span>Hackney Rd</span></div></div>
+    </a>
+    <a href="moonshine-saloon.html" class="sc-card card" data-cat="nightlife" data-vibe="evening" data-experience="immersive-cocktail">
+      <div class="card-bg g1" style="position:absolute;inset:0"></div>
+      <img src="https://moonshinesaloon.com/assets/img/copy-of-charlottejein-moonshine-2-copy.2d4a5e66.webp" alt="Moonshine Saloon" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="card-body"><div><span class="tag">Immersive Cocktail</span></div><div class="card-title">Moonshine Saloon</div><div class="card-meta"><span>Houndsditch</span></div></div>
+    </a>
+    <a href="avora.html" class="sc-card card" data-cat="nightlife" data-vibe="evening" data-experience="immersive-cocktail">
+      <div class="card-bg g7" style="position:absolute;inset:0"></div>
+      <img src="https://www.avora-experience.co.uk/wp-content/uploads/2025/01/15-0769-1-1140x760.jpg" alt="Avora" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="card-price">From £44.50</div>
+      <div class="card-body"><div><span class="tag">Immersive Cocktail</span></div><div class="card-title">Avora</div><div class="card-meta"><span>Hackney Road</span></div></div>
+    </a>
+    <a href="crystal-maze.html" class="sc-card card" data-cat="film" data-vibe="weekend" data-experience="real-life-games">
+      <div class="card-bg g5" style="position:absolute;inset:0"></div>
+      <img src="https://the-crystal-maze.com/media/cvjmior4/cm_2017_dome.jpg" alt="The Crystal Maze LIVE Experience" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-tint"></div><div class="card-ov"></div>
+      <div class="card-price">From £79</div>
+      <div class="card-body"><div><span class="tag">Real-Life Games</span></div><div class="card-title">The Crystal Maze LIVE Experience</div><div class="card-meta"><span>Shaftesbury Avenue</span></div></div>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-inner">
+    <div class="foot-brand">
+      <div class="nav-logo-box"><img src="logo.png" alt="VeryU"><span>VeryU</span></div>
+      <p>VeryU curates niche, offbeat and deeply personal London experiences — matched to your taste, not the algorithm's.</p>
+    </div>
+    <div class="foot-col"><h5>Discover</h5><ul><li><a href="#">Music</a></li><li><a href="#">Art</a></li><li><a href="#">Food</a></li><li><a href="#">Film</a></li><li><a href="#">Outdoor</a></li></ul></div>
+    <div class="foot-col"><h5>VeryU</h5><ul><li><a href="#">About</a></li><li><a href="#">How it works</a></li><li><a href="#">Submit an event</a></li><li><a href="#">For organisers</a></li></ul></div>
+    <div class="foot-col"><h5>Connect</h5><ul><li><a href="#">Instagram</a></li><li><a href="#">Newsletter</a></li><li><a href="#">TikTok</a></li><li><a href="#">Contact</a></li></ul></div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 VeryU · London</span>
+    <span style="color:var(--purple-light)">Made with ✦ for curious Londoners</span>
+  </div>
+</footer>
+
+<script>
+const PREFS_KEY   = 'veryu_prefs_v2';
+const SIGNUP_KEY  = 'veryu_signup_v1';
+const ORG_PROFILE_KEY = 'veryu_org_profile_v1';
+
+// ── Data collection (Formspree) ───────────
+// TODO: replace with your real Formspree endpoint, e.g. https://formspree.io/f/xxxxxxxx
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
+function sendToFormspree(data) {
+  if (FORMSPREE_ENDPOINT.includes('YOUR_FORM_ID')) {
+    console.warn('VeryU: FORMSPREE_ENDPOINT not configured yet — submission not sent.', data);
+    return;
+  }
+  const fd = new FormData();
+  Object.entries(data).forEach(([k, v]) => fd.append(k, v));
+  fetch(FORMSPREE_ENDPOINT, { method: 'POST', headers: { Accept: 'application/json' }, body: fd }).catch(() => {});
+}
+
+// ── Sign-up popup ─────────────────────────
+function switchTab(type) {
+  document.getElementById('tabUser').classList.toggle('active', type === 'user');
+  document.getElementById('tabOrg').classList.toggle('active', type === 'organiser');
+  document.getElementById('formUser').classList.toggle('active', type === 'user');
+  document.getElementById('formOrganiser').classList.toggle('active', type === 'organiser');
+}
+
+function openWaitlist(type) {
+  document.getElementById('onboarding').classList.add('hidden');
+  document.getElementById('orgOnboarding').classList.add('hidden');
+  document.getElementById('suOverlay').classList.remove('hidden');
+  switchTab(type);
+
+  const saved = localStorage.getItem(SIGNUP_KEY);
+  const signup = saved ? JSON.parse(saved) : null;
+  if (signup && signup.email && signup.type === type) {
+    // Already joined as this type — show confirmation instead of the blank signup form again
+    document.getElementById('suMain').style.display = 'none';
+    document.getElementById('suSuccessMsg').textContent = "You're already on the waitlist — we'll be in touch soon.";
+    const cta = document.querySelector('#suSuccess .su-cta');
+    cta.textContent = 'Personalise My Feed →';
+    cta.onclick = proceedAfterSignup;
+    document.getElementById('suSuccess').classList.add('active');
+  } else {
+    document.getElementById('suMain').style.display = '';
+    document.getElementById('suSuccess').classList.remove('active');
+  }
+}
+
+function submitSignup(type) {
+  const email = type === 'user'
+    ? document.getElementById('userEmail').value.trim()
+    : document.getElementById('orgEmail').value.trim();
+  if (!email || !email.includes('@')) {
+    const input = document.getElementById(type === 'user' ? 'userEmail' : 'orgEmail');
+    input.style.borderColor = '#ef4444';
+    input.focus();
+    setTimeout(() => input.style.borderColor = '', 2000);
+    return;
+  }
+  localStorage.setItem(SIGNUP_KEY, JSON.stringify({ type, email, ts: Date.now() }));
+  sendToFormspree(type === 'user'
+    ? { form_type: 'waitlist-user', name: document.getElementById('userName').value.trim(), email, page: location.pathname, ts: new Date().toISOString() }
+    : { form_type: 'waitlist-organiser', name: document.getElementById('orgName').value.trim(), email, organisation: document.getElementById('orgCompany').value.trim(), page: location.pathname, ts: new Date().toISOString() }
+  );
+  document.getElementById('suMain').style.display = 'none';
+  const msg = type === 'user'
+    ? "We'll reach out soon with your early access details. In the meantime, tell us what you're into and we'll start curating your London."
+    : "Thanks for reaching out. We'll be in touch within 48 hours with partnership details and audience data insights.";
+  document.getElementById('suSuccessMsg').textContent = msg;
+  if (type === 'organiser') {
+    document.querySelector('#suSuccess .su-cta').textContent = 'Tell Us About Your Events →';
+    document.querySelector('#suSuccess .su-cta').onclick = proceedToOrgOnboarding;
+  }
+  document.getElementById('suSuccess').classList.add('active');
+}
+
+function skipSignup() {
+  localStorage.setItem(SIGNUP_KEY, JSON.stringify({ type: 'skipped', ts: Date.now() }));
+  proceedFromSignup();
+}
+
+function proceedAfterSignup() {
+  proceedFromSignup();
+}
+
+function proceedFromSignup() {
+  document.getElementById('suOverlay').classList.add('hidden');
+  const saved = localStorage.getItem(PREFS_KEY);
+  if (!saved) {
+    document.getElementById('onboarding').classList.remove('hidden');
+  } else {
+    applyPersonalization(JSON.parse(saved));
+  }
+}
+
+// ── Event organiser onboarding ────────────
+function proceedToOrgOnboarding() {
+  document.getElementById('suOverlay').classList.add('hidden');
+  document.getElementById('orgOnboarding').classList.remove('hidden');
+}
+function goOrgStep(n) {
+  document.querySelectorAll('#orgOnboarding .ob-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('orgStep' + n)?.classList.add('active');
+}
+function submitOrgOnboarding() {
+  const categories     = [...document.querySelectorAll('#orgCatChips .ob-chip.selected')].map(c => c.dataset.val);
+  const categoryOther  = document.getElementById('orgCatOther').value.trim();
+  const goal           = document.querySelector('#orgGoalOpts .ob-option.selected')?.dataset.val || '';
+  const frequency      = document.querySelector('#orgFreqOpts .ob-option.selected')?.dataset.val || '';
+  const pricing        = document.querySelector('#orgPricingOpts .ob-option.selected')?.dataset.val || '';
+  const discovery      = [...document.querySelectorAll('#orgDiscoveryChips .ob-chip.selected')].map(c => c.dataset.val);
+  const discoveryOther = document.getElementById('orgDiscoveryOther').value.trim();
+  const orgProfile = { categories, categoryOther, goal, frequency, pricing, discovery, discoveryOther, ts: Date.now() };
+  localStorage.setItem(ORG_PROFILE_KEY, JSON.stringify(orgProfile));
+  sendToFormspree({ form_type: 'organiser-profile', categories: categories.join(', '), category_other: categoryOther, goal, frequency, pricing, discovery: discovery.join(', '), discovery_other: discoveryOther, page: location.pathname, ts: new Date().toISOString() });
+  document.querySelectorAll('#orgOnboarding .ob-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('orgDone').classList.add('active');
+}
+function closeOrgOnboarding() {
+  document.getElementById('orgOnboarding').classList.add('hidden');
+}
+
+const TRIBES = {
+  detective:  { name:'The Detective',       emoji:'', desc:"You don't want to be told the story — you want to solve it. Clues, codes and a case that isn't finished until you crack it.", cats:['detective','escape-puzzle'] },
+  immersed:   { name:'The Immersed',        emoji:'', desc:"You want to walk into the story and become part of it, not watch it from a seat. The line between performer and audience should disappear.", cats:['immersive-theatre','fantasy'] },
+  dark:       { name:'The Dark Explorer',   emoji:'', desc:"You're drawn to the unsettling and the atmospheric — history's darker corners, and experiences that aren't afraid to make you uneasy.", cats:['horror','historical'] },
+  sensory:    { name:'The Sensory Indulger',emoji:'', desc:"For you, a great night is tasted as much as it's experienced. Theatrical dining and cocktails with a story attached, every time.", cats:['immersive-cocktail','experiential-dining'] },
+  gamemaster: { name:'The Game Master',     emoji:'', desc:"Rules, mechanics, a bit of sleight of hand — you love experiences with a system to master, not just a story to follow.", cats:['real-life-games','magic'] },
+  future:     { name:'The Future Wanderer', emoji:'', desc:"You're drawn to the strange and the speculative — installations and worlds that feel like they're from somewhere else entirely.", cats:['scifi','interactive-art'] }
+};
+
+const CAT_LABELS = {
+  detective:'Mystery & Detective', 'immersive-theatre':'Immersive Theatre', 'escape-puzzle':'Escape & Puzzle Adventures',
+  'immersive-cocktail':'Immersive Cocktail Experiences', 'experiential-dining':'Experiential Dining', fantasy:'Fantasy & Fiction Worlds',
+  horror:'Horror & Dark Experiences', 'interactive-art':'Interactive Art & Installations', 'real-life-games':'Real-Life Games',
+  magic:'Magic & Illusion', scifi:'Sci-Fi & Futuristic', historical:'Time Travel & Historical'
+};
+
+// ── Onboarding ────────────────────────────
+function goStep(n) {
+  document.querySelectorAll('.ob-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('obStep' + n)?.classList.add('active');
+}
+function initChipGroup(containerId, otherWrapId) {
+  document.querySelectorAll('#' + containerId + ' .ob-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      c.classList.toggle('selected');
+      if (otherWrapId && c.dataset.val === 'other') {
+        document.getElementById(otherWrapId).style.display = c.classList.contains('selected') ? 'block' : 'none';
+      }
+    });
+  });
+}
+initChipGroup('catChips');
+initChipGroup('timeChips');
+initChipGroup('orgCatChips', 'orgCatOtherWrap');
+initChipGroup('orgDiscoveryChips', 'orgDiscoveryOtherWrap');
+function selectOne(el, id) {
+  document.querySelectorAll('#' + id + ' .ob-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function runPersonalise() {
+  const cats     = [...document.querySelectorAll('#catChips .ob-chip.selected')].map(c => c.dataset.val);
+  const times    = [...document.querySelectorAll('#timeChips .ob-chip.selected')].map(c => c.dataset.val);
+  const distance = document.querySelector('#distanceOpts .ob-option.selected')?.dataset.val || 'up-to-1h';
+  const prefs = { cats: cats.length ? cats : ['immersive-theatre','escape-puzzle'], times: times.length ? times : ['weekend'], distance };
+  document.querySelectorAll('.ob-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('obLoading').classList.add('active');
+  document.getElementById('obSkipBtn').style.display = 'none';
+  setTimeout(() => showReveal(prefs), 1800);
+}
+function showReveal(prefs) {
+  const tribe = determineTribe(prefs);
+  const t = TRIBES[tribe];
+  prefs.tribe = tribe;
+  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  document.getElementById('revealEmoji').textContent  = t.emoji;
+  document.getElementById('revealTitle').textContent  = t.name;
+  document.getElementById('revealDesc').textContent   = t.desc;
+  const scores = getTopScores(tribe);
+  document.getElementById('revealCount').textContent  = '✦ ' + scores.count + ' experiences found for you';
+  document.getElementById('revealScore').textContent  = '✦ Up to ' + scores.top + '% match';
+  document.querySelectorAll('.ob-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('obReveal').classList.add('active');
+}
+function enterFeed() {
+  const saved = localStorage.getItem(PREFS_KEY);
+  document.getElementById('onboarding').classList.add('hidden');
+  if (saved) applyPersonalization(JSON.parse(saved));
+}
+function skipOnboarding() { document.getElementById('onboarding').classList.add('hidden'); }
+function resetPrefs() { localStorage.removeItem(PREFS_KEY); localStorage.removeItem(SIGNUP_KEY); location.reload(); }
+
+// ── Tribe logic ───────────────────────────
+function determineTribe(p) {
+  const cats = p.cats || [];
+  let best = 'detective', bestOverlap = -1;
+  for (const key in TRIBES) {
+    const overlap = TRIBES[key].cats.filter(c => cats.includes(c)).length;
+    if (overlap > bestOverlap) { bestOverlap = overlap; best = key; }
+  }
+  return best;
+}
+
+// ── Scoring ───────────────────────────────
+// cardExperience is the card's data-experience value — only set on cards that are
+// genuinely immersive-type experiences. Cards without one (e.g. a wine bar or an
+// outdoor boat trip) always score at the neutral base and won't show a match badge.
+function calcScore(cardExperience, tribe) {
+  const t = TRIBES[tribe];
+  let s = 42;
+  if (cardExperience && t.cats.includes(cardExperience)) s += 42;
+  s += Math.floor(Math.random() * 8) - 3;
+  return Math.min(Math.max(s, 45), 99);
+}
+function getTopScores(tribe) {
+  let count = 0, top = 0;
+  document.querySelectorAll('.card[data-experience]').forEach(c => {
+    const s = calcScore(c.dataset.experience, tribe);
+    if (s >= 70) count++;
+    if (s > top) top = s;
+  });
+  return { count, top };
+}
+function getReasons(cardExperience, tribe) {
+  const t = TRIBES[tribe], r = [];
+  if (cardExperience && t.cats.includes(cardExperience)) r.push('You love ' + CAT_LABELS[cardExperience]);
+  r.push('Rated 4.8 by people with your taste');
+  return r;
+}
+
+// ── Match tiers: 3-colour personalisation strength ──
+// good (65-79%): everyone · great (80-89%): everyone
+// perfect (90%+): flagged as a future premium unlock — visible now, locked look only
+const LOCK_SVG = '<svg class="match-lock" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3z"/></svg>';
+function matchTier(score) {
+  if (score >= 90) return { cls: 'tier-perfect', label: 'Perfect Match', locked: true };
+  if (score >= 80) return { cls: 'tier-great',   label: 'Great Match',   locked: false };
+  if (score >= 65) return { cls: 'tier-good',    label: 'Good Match',    locked: false };
+  return null;
+}
+
+// ── Apply personalisation ─────────────────
+function applyPersonalization(prefs) {
+  prefs.cats = prefs.cats || [];
+  let tribe = prefs.tribe || determineTribe(prefs);
+  if (!TRIBES[tribe]) tribe = determineTribe(prefs); // stale localStorage from an older taxonomy — re-derive
+  const t = TRIBES[tribe];
+  const catNames = prefs.cats.slice(0,2).map(c => CAT_LABELS[c] || c).join(' & ');
+
+  document.getElementById('tribeBadgeLabel').textContent = t.emoji + ' ' + t.name;
+  document.getElementById('tribeBadge').classList.add('visible');
+  document.getElementById('gridSub').textContent = 'Personalised for your love of ' + catNames + ' · Updated daily';
+
+  document.querySelectorAll('.card[data-experience]').forEach(card => {
+    const score = calcScore(card.dataset.experience, tribe);
+    const badge = card.querySelector('.match-badge');
+    const tier = matchTier(score);
+    if (!badge || !tier) return;
+    badge.classList.remove('tier-good', 'tier-great', 'tier-perfect');
+    badge.classList.add('show', tier.cls);
+    badge.querySelector('.match-pct').textContent = '✦ ' + score + '% match';
+    const existingLock = badge.querySelector('.match-lock');
+    if (existingLock) existingLock.remove();
+    if (tier.locked) badge.querySelector('.match-pct').insertAdjacentHTML('afterend', LOCK_SVG);
+    const list = badge.querySelector('.match-reason-list');
+    if (list) {
+      let items = getReasons(card.dataset.experience, tribe).map(r => '<div class="match-tooltip-item">' + r + '</div>').join('');
+      if (tier.locked) items += '<div class="match-tooltip-item lock-tip">Perfect Matches unlock with VeryU Premium after your free month</div>';
+      list.innerHTML = items;
+    }
+  });
+
+  buildCuratedStrip(prefs, tribe);
+}
+
+function buildCuratedStrip(prefs, tribe) {
+  const EVENTS = [
+    { id:'gallery',   experience:'real-life-games',  title:'SENSAS London',                      img:'https://sensas-experience.com/_astro/PYC02522_2_pkzvww_Z12Pat9.webp', price:'From £38', place:'Vauxhall',   grad:'g2', url:'sensas.html' },
+    { id:'jazz',      experience:'real-life-games',  title:'The Traitors: Live Experience',      img:'https://cdn.prod.website-files.com/67111d8f1fd87729671c7475/673dd8319bed3f1dadf8dd3e_Screenshot%202024-11-20%20at%2012.38.00.webp', price:'£29.50',place:'Covent Garden', grad:'g1', url:'traitors-live.html' },
+    { id:'rave',      experience:'real-life-games',  title:'Monopoly Lifesized',                 img:'https://monopolylifesized.com/app/uploads/2024/04/monopoly-top-hat-bar.jpg', price:'From £54', place:'Tottenham Court Road', grad:'g6', url:'monopoly.html' },
+    { id:'supper',    experience:null,               title:"Gordon's Wine Bar",                  img:'https://www.gordonswinebar.com/propeller/uploads/2026/02/20190903_144546-1-1.jpg?format=auto', price:'',     place:'Villiers Street', grad:'g5', url:'gordons-wine-bar.html' },
+    { id:'cinema',    experience:'experiential-dining',title:'The Big London Bake: East',         img:'https://images.squarespace-cdn.com/content/v1/62fa5183720e5639a999d37f/0e8a1321-939a-4098-a24b-66b1feb4a3ef/BB_East_webres-49.jpg', price:'From £32', place:'Haggerston', grad:'g3', url:'big-london-bake.html' },
+    { id:'candle',    experience:'immersive-theatre',title:'Shakespeare by Candlelight',         img:'https://images.squarespace-cdn.com/content/v1/525bd8b5e4b0daa056d3ae62/343592b7-3937-4103-91ed-b437a47c257a/SHAKESPEARE+BY+CANDLELIGHT+2.png', price:'',     place:'Bankside',   grad:'g8', url:'shakespeare-candlelight.html' },
+    { id:'theatre',   experience:'detective',        title:'Sherlock: The Official Live Game',   img:'https://www.attractiontickets.com/sites/default/files/styles/unified_gallery_image_tablet/public/2025-02/427078-atd.jpg.jpg?itok=bVabKJ6q', price:'From £30', place:"Shepherd's Bush", grad:'g3', url:'sherlock.html' },
+    { id:'swim',      experience:null,               title:'Skuna Hot Tub Boat',                 img:'https://images.squarespace-cdn.com/content/v1/6899d635d34b9245422f0a44/30da8700-1d73-47c0-b7ee-a53a9a796abe/hot-tub%2851%29.jpg', price:'From £45', place:'Canary Wharf', grad:'g4', url:'skuna-hot-tub.html' },
+  ];
+  const scored = EVENTS.map(ev => ({ ...ev, score: calcScore(ev.experience, tribe) })).sort((a,b) => b.score - a.score).slice(0,5);
+  const row = document.getElementById('curatedRow');
+  row.innerHTML = '';
+  scored.forEach(ev => {
+    const a = document.createElement('a');
+    a.href = ev.url || ('activity.html?event=' + ev.id);
+    a.className = 'curated-card';
+    const placeLine = ev.price ? `${ev.place} · ${ev.price}` : ev.place;
+    const tier = matchTier(ev.score) || { cls: 'tier-low', locked: false };
+    a.innerHTML = `<div class="card-bg ${ev.grad}" style="position:absolute;inset:0"></div><img src="${ev.img}" alt="${ev.title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'"><div class="card-tint"></div><div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.9) 0%,transparent 60%)"></div><div class="curated-score ${tier.cls}">✦ ${ev.score}% match${tier.locked ? LOCK_SVG : ''}</div><div style="position:absolute;bottom:0;left:0;right:0;padding:.875rem 1rem"><div style="font-family:Helvetica,Arial,sans-serif;font-size:.88rem;font-weight:700;line-height:1.3">${ev.title}</div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px">${placeLine}</div></div>`;
+    row.appendChild(a);
+  });
+  const catNames = prefs.cats.slice(0,2).map(c => CAT_LABELS[c] || c).join(' & ');
+  document.getElementById('curatedSub').textContent = 'Based on your love of ' + catNames;
+  document.getElementById('curatedStrip').classList.add('visible');
+}
+
+// ── Filter pills ──────────────────────────
+document.querySelectorAll('.pill').forEach(p => {
+  p.addEventListener('click', function() {
+    document.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    const f = this.dataset.filter;
+    document.querySelectorAll('.grid .card').forEach(card => {
+      card.style.visibility = (f === 'all' || card.dataset.cat === f) ? 'visible' : 'hidden';
+    });
+  });
+});
+
+// ── Save hearts ───────────────────────────
+document.querySelectorAll('.card-save').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    const saved = btn.classList.toggle('saved');
+    btn.textContent = saved ? '♥' : '♡';
+    if (saved) {
+      const card = btn.closest('.card');
+      const eventTitle = card?.querySelector('.card-title')?.textContent?.trim() || '';
+      sendToFormspree({ form_type: 'save-experience', event: eventTitle, url: card?.href || location.href, page: location.pathname, ts: new Date().toISOString() });
+      const toast = document.createElement('div');
+      toast.textContent = '✦ Saved  Your recommendations keep getting better';
+      Object.assign(toast.style, { position:'fixed', bottom:'2rem', left:'50%', transform:'translateX(-50%)', background:'rgba(234,86,134,.95)', color:'#fff', padding:'10px 20px', borderRadius:'10px', fontSize:'13px', fontWeight:'600', zIndex:'999', backdropFilter:'blur(8px)', transition:'opacity .3s' });
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2000);
+    }
+  });
+});
+
+// ── Hero app-preview countdown widget ──────
+function updatePhoneCountdown() {
+  const target = new Date('2026-07-04T19:30:00');
+  const diff = Math.max(0, target - new Date());
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const pcD = document.getElementById('pcD'), pcH = document.getElementById('pcH'), pcM = document.getElementById('pcM');
+  if (pcD) pcD.textContent = String(d).padStart(2, '0');
+  if (pcH) pcH.textContent = String(h).padStart(2, '0');
+  if (pcM) pcM.textContent = String(m).padStart(2, '0');
+}
+updatePhoneCountdown();
+setInterval(updatePhoneCountdown, 60000);
+
+// ── Hero app-preview micro-interactions: tap ──────
+(function initPhoneMock() {
+  document.querySelectorAll('.toggle').forEach(t => {
+    t.addEventListener('click', () => t.classList.toggle('off'));
+  });
+
+  document.querySelectorAll('.phone-tabbar .tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.phone-tabbar .tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+})();
+
+// ── Init ──────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Dev convenience: index.html?reset=1 wipes local test state (no DevTools needed)
+  if (new URLSearchParams(location.search).get('reset') === '1') {
+    localStorage.removeItem(SIGNUP_KEY);
+    localStorage.removeItem(PREFS_KEY);
+    localStorage.removeItem(ORG_PROFILE_KEY);
+  }
+
+  // Onboarding always starts hidden — signup controls when it appears
+  document.getElementById('onboarding').classList.add('hidden');
+
+  const signupDone = localStorage.getItem(SIGNUP_KEY);
+  const prefsSaved = localStorage.getItem(PREFS_KEY);
+
+  if (!signupDone) {
+    // First visit: show signup popup
+    document.getElementById('suOverlay').classList.remove('hidden');
+  } else {
+    // Signup already seen: hide it
+    document.getElementById('suOverlay').classList.add('hidden');
+    if (prefsSaved) {
+      applyPersonalization(JSON.parse(prefsSaved));
+    } else {
+      document.getElementById('onboarding').classList.remove('hidden');
+    }
+  }
+});
+</script>
+</body>
+</html>
