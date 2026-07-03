@@ -1112,16 +1112,20 @@ const SIGNUP_KEY  = 'veryu_signup_v1';
 const ORG_PROFILE_KEY = 'veryu_org_profile_v1';
 
 // ── Data collection (Formspree) ───────────
-// TODO: replace with your real Formspree endpoint, e.g. https://formspree.io/f/xxxxxxxx
+// Click-tracking (notify-me, save-experience) — high-volume, disposable
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mqevgrgv';
-function sendToFormspree(data) {
-  if (FORMSPREE_ENDPOINT.includes('YOUR_FORM_ID')) {
-    console.warn('VeryU: FORMSPREE_ENDPOINT not configured yet — submission not sent.', data);
+// Email capture (waitlist-user, waitlist-organiser, organiser-profile) — kept on a
+// separate form so click volume can never eat into the monthly quota for real signups
+const FORMSPREE_EMAIL_ENDPOINT = 'https://formspree.io/f/xeebvqzr';
+function sendToFormspree(data, endpoint) {
+  endpoint = endpoint || FORMSPREE_ENDPOINT;
+  if (endpoint.includes('YOUR_FORM_ID')) {
+    console.warn('VeryU: Formspree endpoint not configured yet — submission not sent.', data);
     return;
   }
   const fd = new FormData();
   Object.entries(data).forEach(([k, v]) => fd.append(k, v));
-  fetch(FORMSPREE_ENDPOINT, { method: 'POST', headers: { Accept: 'application/json' }, body: fd }).catch(() => {});
+  fetch(endpoint, { method: 'POST', headers: { Accept: 'application/json' }, body: fd }).catch(() => {});
 }
 
 // ── Sign-up popup ─────────────────────────
@@ -1168,7 +1172,8 @@ function submitSignup(type) {
   localStorage.setItem(SIGNUP_KEY, JSON.stringify({ type, email, ts: Date.now() }));
   sendToFormspree(type === 'user'
     ? { form_type: 'waitlist-user', name: document.getElementById('userName').value.trim(), email, page: location.pathname, ts: new Date().toISOString() }
-    : { form_type: 'waitlist-organiser', name: document.getElementById('orgName').value.trim(), email, organisation: document.getElementById('orgCompany').value.trim(), page: location.pathname, ts: new Date().toISOString() }
+    : { form_type: 'waitlist-organiser', name: document.getElementById('orgName').value.trim(), email, organisation: document.getElementById('orgCompany').value.trim(), page: location.pathname, ts: new Date().toISOString() },
+    FORMSPREE_EMAIL_ENDPOINT
   );
   document.getElementById('suMain').style.display = 'none';
   const msg = type === 'user'
@@ -1220,7 +1225,7 @@ function submitOrgOnboarding() {
   const discoveryOther = document.getElementById('orgDiscoveryOther').value.trim();
   const orgProfile = { categories, categoryOther, goal, frequency, pricing, discovery, discoveryOther, ts: Date.now() };
   localStorage.setItem(ORG_PROFILE_KEY, JSON.stringify(orgProfile));
-  sendToFormspree({ form_type: 'organiser-profile', categories: categories.join(', '), category_other: categoryOther, goal, frequency, pricing, discovery: discovery.join(', '), discovery_other: discoveryOther, page: location.pathname, ts: new Date().toISOString() });
+  sendToFormspree({ form_type: 'organiser-profile', categories: categories.join(', '), category_other: categoryOther, goal, frequency, pricing, discovery: discovery.join(', '), discovery_other: discoveryOther, page: location.pathname, ts: new Date().toISOString() }, FORMSPREE_EMAIL_ENDPOINT);
   document.querySelectorAll('#orgOnboarding .ob-step').forEach(s => s.classList.remove('active'));
   document.getElementById('orgDone').classList.add('active');
 }
