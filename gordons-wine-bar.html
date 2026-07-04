@@ -152,16 +152,20 @@ footer { background: var(--surface); border-top: 1px solid var(--border); paddin
 .plan-header h3 { font-family: Helvetica, Arial, sans-serif; font-size: 1.4rem; font-weight: 900; margin-bottom: .4rem; }
 .plan-header p { color: var(--text-muted); font-size: 13px; }
 .plan-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
-.plan-card { border: 1.5px solid var(--border); border-radius: 16px; padding: 1.25rem 1rem; cursor: pointer; transition: all .2s; text-align: left; }
+.plan-card { border: 1.5px solid var(--border); border-radius: 16px; padding: 1.25rem 1rem; cursor: pointer; transition: all .2s; text-align: left; position: relative; }
 .plan-card:hover { border-color: var(--purple); }
 .plan-card.selected { border-color: var(--purple); background: rgba(112,52,244,.1); }
+.plan-card.selected::after { content: '✓ Selected'; position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700; color: var(--purple-light); background: rgba(112,52,244,.16); padding: 2px 8px; border-radius: 100px; }
+.plan-badge-slot { height: 18px; margin-bottom: .5rem; }
 .plan-card .plan-name { font-weight: 800; font-size: 15px; margin-bottom: .25rem; }
 .plan-card.premium .plan-name { color: var(--purple-light); }
 .plan-card .plan-price { font-size: 22px; font-weight: 900; margin-bottom: .75rem; }
 .plan-card .plan-price span { font-size: 12px; font-weight: 500; color: var(--text-muted); }
-.plan-card ul { list-style: none; display: flex; flex-direction: column; gap: .4rem; }
-.plan-card li { font-size: 11.5px; color: var(--text-muted); display: flex; gap: 6px; }
-.plan-badge { display: inline-block; background: var(--purple); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; margin-bottom: .5rem; text-transform: uppercase; letter-spacing: .5px; }
+.plan-card ul { list-style: none; display: flex; flex-direction: column; gap: .45rem; }
+.plan-card li { font-size: 11.5px; color: var(--text-muted); display: flex; align-items: flex-start; gap: 7px; }
+.plan-card li .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--mint); margin-top: 5px; flex-shrink: 0; }
+.plan-card.premium li .dot { background: var(--purple-light); }
+.plan-badge { display: inline-block; background: var(--purple); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; text-transform: uppercase; letter-spacing: .5px; }
 .plan-note { font-size: 11.5px; color: var(--text-dim); text-align: center; line-height: 1.6; margin-top: .5rem; }
 .plan-close { width: 100%; background: var(--text); color: var(--bg); border: none; padding: 12px; border-radius: 11px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 1rem; font-family: inherit; transition: all .25s; }
 .plan-close:hover { background: var(--purple-light); }
@@ -360,31 +364,32 @@ footer { background: var(--surface); border-top: 1px solid var(--border); paddin
     </div>
     <div class="plan-cards">
       <div class="plan-card" id="planFree" onclick="selectPlan('free')">
+        <div class="plan-badge-slot"></div>
         <div class="plan-name">Free</div>
         <div class="plan-price">£0</div>
         <ul>
-          <li>Browse all experiences</li>
-          <li>Basic personalised matches</li>
-          <li>Notify Me alerts</li>
-          <li>Unlimited saves</li>
+          <li><span class="dot"></span>Browse all experiences</li>
+          <li><span class="dot"></span>Basic personalised matches</li>
+          <li><span class="dot"></span>Notify Me alerts</li>
+          <li><span class="dot"></span>Unlimited saves</li>
         </ul>
       </div>
       <div class="plan-card premium" id="planPremium" onclick="selectPlan('premium')">
-        <div class="plan-badge">Recommended</div>
+        <div class="plan-badge-slot"><span class="plan-badge">Recommended</span></div>
         <div class="plan-name">Premium</div>
         <div class="plan-price">£4<span> /month</span></div>
         <ul>
-          <li>Everything in Free</li>
-          <li>Unlock Perfect Matches</li>
-          <li>48–72h early access</li>
-          <li>Full exclusive discounts</li>
-          <li>Find a Buddy</li>
-          <li>Personalised widget</li>
+          <li><span class="dot"></span>Everything in Free</li>
+          <li><span class="dot"></span>Unlock Perfect Matches</li>
+          <li><span class="dot"></span>48–72h early access</li>
+          <li><span class="dot"></span>Full exclusive discounts</li>
+          <li><span class="dot"></span>Find a Buddy</li>
+          <li><span class="dot"></span>Personalised widget</li>
         </ul>
       </div>
     </div>
     <div class="plan-note">This is a preview of what's coming — you won't be charged, and no payment is being processed yet.</div>
-    <button class="plan-close" onclick="closePlanModal()">Got it</button>
+    <button class="plan-close" onclick="closePlanModal()">Confirmed</button>
   </div>
 </div>
 
