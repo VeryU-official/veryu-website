@@ -660,7 +660,10 @@ function submitNotify(eventName) {
   sendToFormspree({ form_type: 'notify-me', event: eventName, page: location.pathname, ts: new Date().toISOString() });
   document.getElementById('notifyBtn').style.display = 'none';
   document.getElementById('notifyDone').style.display = 'block';
-  openPlanModal();
+  if (!localStorage.getItem('veryu_plan_prompted')) {
+    localStorage.setItem('veryu_plan_prompted', '1');
+    openPlanModal();
+  }
 }
 function openPlanModal() {
   document.getElementById('planOverlay').classList.remove('hidden');
